@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import List
 import sys
-sys.path.append('.')
+
+sys.path.append(".")
 import hydra
 import numpy as np
 import torch
@@ -20,7 +21,6 @@ from pytorch_lightning.loggers import WandbLogger
 from diffcsp.common.utils import log_hyperparameters, PROJECT_ROOT
 
 import wandb
-
 
 
 def build_callbacks(cfg: DictConfig) -> List[Callback]:
@@ -73,8 +73,7 @@ def run(cfg: DictConfig) -> None:
 
     if cfg.train.pl_trainer.fast_dev_run:
         hydra.utils.log.info(
-            f"Debug mode <{cfg.train.pl_trainer.fast_dev_run=}>. "
-            f"Forcing debugger friendly configuration!"
+            f"Debug mode <{cfg.train.pl_trainer.fast_dev_run=}>. " f"Forcing debugger friendly configuration!"
         )
         # Debuggers don't like GPUs nor multiprocessing
         cfg.train.pl_trainer.gpus = 0
@@ -90,9 +89,7 @@ def run(cfg: DictConfig) -> None:
 
     # Instantiate datamodule
     hydra.utils.log.info(f"Instantiating <{cfg.data.datamodule._target_}>")
-    datamodule: pl.LightningDataModule = hydra.utils.instantiate(
-        cfg.data.datamodule, _recursive_=False
-    )
+    datamodule: pl.LightningDataModule = hydra.utils.instantiate(cfg.data.datamodule, _recursive_=False)
 
     # Instantiate model
     hydra.utils.log.info(f"Instantiating <{cfg.model._target_}>")
@@ -109,8 +106,8 @@ def run(cfg: DictConfig) -> None:
     if datamodule.scaler is not None:
         model.lattice_scaler = datamodule.lattice_scaler.copy()
         model.scaler = datamodule.scaler.copy()
-    torch.save(datamodule.lattice_scaler, hydra_dir / 'lattice_scaler.pt')
-    torch.save(datamodule.scaler, hydra_dir / 'prop_scaler.pt')
+    torch.save(datamodule.lattice_scaler, hydra_dir / "lattice_scaler.pt")
+    torch.save(datamodule.scaler, hydra_dir / "prop_scaler.pt")
     # Instantiate the callbacks
     callbacks: List[Callback] = build_callbacks(cfg=cfg)
 
@@ -136,14 +133,14 @@ def run(cfg: DictConfig) -> None:
     (hydra_dir / "hparams.yaml").write_text(yaml_conf)
 
     # Load checkpoint (if exist)
-    ckpts = list(hydra_dir.glob('*.ckpt'))
+    ckpts = list(hydra_dir.glob("*.ckpt"))
     if len(ckpts) > 0:
-        ckpt_epochs = np.array([int(ckpt.parts[-1].split('-')[0].split('=')[1]) for ckpt in ckpts])
+        ckpt_epochs = np.array([int(ckpt.parts[-1].split("-")[0].split("=")[1]) for ckpt in ckpts])
         ckpt = str(ckpts[ckpt_epochs.argsort()[-1]])
         hydra.utils.log.info(f"found checkpoint: {ckpt}")
     else:
         ckpt = None
-          
+
     hydra.utils.log.info("Instantiating the Trainer")
     trainer = pl.Trainer(
         default_root_dir=hydra_dir,
@@ -151,7 +148,7 @@ def run(cfg: DictConfig) -> None:
         callbacks=callbacks,
         deterministic=cfg.train.deterministic,
         check_val_every_n_epoch=cfg.logging.val_check_interval,
-        progress_bar_refresh_rate=cfg.logging.progress_bar_refresh_rate,
+        # progress_bar_refresh_rate=cfg.logging.progress_bar_refresh_rate,
         resume_from_checkpoint=ckpt,
         **cfg.train.pl_trainer,
     )
