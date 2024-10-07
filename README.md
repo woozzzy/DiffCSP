@@ -1,12 +1,12 @@
 # Crystal Structure Prediction by Joint Equivariant Diffusion (NeurIPS 2023)
 
-Implementation codes for Crystal Structure Prediction by Joint Equivariant Diffusion (DiffCSP). 
+Implementation codes for Crystal Structure Prediction by Joint Equivariant Diffusion (DiffCSP).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/jiaor17/DiffCSP/blob/main/LICENSE)   [**[Paper]**](https://arxiv.org/abs/2309.04475)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/jiaor17/DiffCSP/blob/main/LICENSE) [**[Paper]**](https://arxiv.org/abs/2309.04475)
 
-![Overview](fig/overview.png "Overview")
+![Overview](fig/overview.png 'Overview')
 
-![Demo](fig/demo.gif "Demo")
+![Demo](fig/demo.gif 'Demo')
 
 ### Dependencies and Setup
 
@@ -23,7 +23,7 @@ Rename the `.env.template` file into `.env` and specify the following variables.
 ```
 PROJECT_ROOT: the absolute path of this repo
 HYDRA_JOBS: the absolute path to save hydra outputs
-WABDB_DIR: the absolute path to save wabdb outputs
+WANDB_DIR: the absolute path to save wandb outputs
 ```
 
 ### Training
@@ -40,17 +40,17 @@ For the Ab Initio Generation task
 python diffcsp/run.py data=<dataset> model=diffusion_w_type expname=<expname>
 ```
 
-The ``<dataset>`` tag can be selected from perov_5, mp_20, mpts_52 and carbon_24, and the ``<expname>`` tag can be an arbitrary name to identify each experiment. Pre-trained checkpoints are provided [here](https://drive.google.com/drive/folders/11WOc9lTZN4hkIY7SKLCIrbsTMGy9TsoW?usp=sharing).
+The `<dataset>` tag can be selected from perov_5, mp_20, mpts_52 and carbon_24, and the `<expname>` tag can be an arbitrary name to identify each experiment. Pre-trained checkpoints are provided [here](https://drive.google.com/drive/folders/11WOc9lTZN4hkIY7SKLCIrbsTMGy9TsoW?usp=sharing).
 
 ### Evaluation
 
-#### Stable structure prediction 
+#### Stable structure prediction
 
-One sample 
+One sample
 
 ```
 python scripts/evaluate.py --model_path <model_path> --dataset <dataset>
-python scripts/compute_metrics.py --root_path <model_path> --tasks csp --gt_file data/<dataset>/test.csv 
+python scripts/compute_metrics.py --root_path <model_path> --tasks csp --gt_file data/<dataset>/test.csv
 ```
 
 Multiple samples
@@ -67,7 +67,6 @@ python scripts/generation.py --model_path <model_path> --dataset <dataset>
 python scripts/compute_metrics.py --root_path <model_path> --tasks gen --gt_file data/<dataset>/test.csv
 ```
 
-
 #### Sample from arbitrary composition
 
 ```
@@ -77,7 +76,7 @@ python scripts/sample.py --model_path <model_path> --save_path <save_path> --for
 #### Property Optimization
 
 ```
-# train a time-dependent energy prediction model 
+# train a time-dependent energy prediction model
 python diffcsp/run.py data=<dataset> model=energy expname=<expname> data.datamodule.batch_size.test=100
 
 # Optimization
@@ -94,6 +93,7 @@ The main framework of this codebase is build upon [CDVAE](https://github.com/txi
 ### Citation
 
 Please consider citing our work if you find it helpful:
+
 ```
 @article{jiao2023crystal,
   title={Crystal structure prediction by joint equivariant diffusion},
