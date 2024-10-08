@@ -7,9 +7,10 @@ optimizer:
     eps: 1e-08
     weight_decay: 0
 
-use_lr_scheduler: false
+use_lr_scheduler: true
 lr_scheduler:
     _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
     factor: 0.6
     patience: 30
+    frequency: 100
     min_lr: 1e-4
