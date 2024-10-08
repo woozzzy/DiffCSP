@@ -166,6 +166,6 @@ runs/
 clean/
 
 .DS_Store
-.out
-.pt 
+*.out
+*.pt 
 slurm/
