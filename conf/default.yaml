@@ -20,6 +20,7 @@ hydra:
             WANDB_DIR: ${oc.env:WANDB_DIR}
 
 defaults:
+    - _self_
     - data: default
     - logging: default
     - model: diffusion
