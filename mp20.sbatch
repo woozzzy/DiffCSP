@@ -4,8 +4,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=16G                       
 #SBATCH --gres=gpu:H100:1                      
-#SBATCH -t5:00:00                                   
-#SBATCH -oReport-%j.out                       
+#SBATCH --time=5:00:00                                   
+#SBATCH --output=slurm/Report-%j.out                       
 
 module load anaconda3                
                

@@ -128,7 +128,7 @@ class CrystDataModule(pl.LightningDataModule):
         return f"{self.__class__.__name__}(" f"{self.datasets=}, " f"{self.num_workers=}, " f"{self.batch_size=})"
 
 
-@hydra.main(version_base=1.3, config_path=str(PROJECT_ROOT / "conf"), config_name="default")
+@hydra.main(version_base="1.3", config_path=str(PROJECT_ROOT / "conf"), config_name="default")
 def main(cfg: omegaconf.DictConfig):
     datamodule: pl.LightningDataModule = hydra.utils.instantiate(cfg.data.datamodule, _recursive_=False)
     datamodule.setup("fit")
