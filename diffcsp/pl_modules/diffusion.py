@@ -244,6 +244,7 @@ class CSPDiffusion(BaseModule):
             on_step=True,
             on_epoch=True,
             prog_bar=True,
+            batch_size=batch.num_graphs,
         )
 
         if loss.isnan():
@@ -262,6 +263,7 @@ class CSPDiffusion(BaseModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
+            batch_size=batch.num_graphs,
         )
         return loss
 
@@ -273,6 +275,7 @@ class CSPDiffusion(BaseModule):
 
         self.log_dict(
             log_dict,
+            batch_size=batch.num_graphs,
         )
         return loss
 

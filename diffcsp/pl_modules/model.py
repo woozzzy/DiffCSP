@@ -71,6 +71,7 @@ class CrystGNN_Supervise(BaseModule):
             on_step=True,
             on_epoch=True,
             prog_bar=True,
+            batch_size=batch.num_graphs,
         )
         return loss
 
@@ -85,6 +86,7 @@ class CrystGNN_Supervise(BaseModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
+            batch_size=batch.num_graphs,
         )
         return loss
 
@@ -96,6 +98,7 @@ class CrystGNN_Supervise(BaseModule):
 
         self.log_dict(
             log_dict,
+            batch_size=batch.num_graphs,
         )
         return loss
 
