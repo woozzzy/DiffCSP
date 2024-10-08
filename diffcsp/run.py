@@ -22,6 +22,10 @@ from diffcsp.common.utils import log_hyperparameters, PROJECT_ROOT
 
 import wandb
 
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 
 def build_callbacks(cfg: DictConfig) -> List[Callback]:
     callbacks: List[Callback] = []

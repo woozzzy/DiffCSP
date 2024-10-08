@@ -8,7 +8,8 @@ import itertools
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
 from pymatgen.analysis.graphs import StructureGraph
-from pymatgen.analysis.local_env import CrystalNN, NearNeighbors
+
+from pymatgen.analysis import local_env
 
 from networkx.algorithms.components import is_connected
 
@@ -200,11 +201,7 @@ chemical_symbols = [
 ]
 
 
-# CrystalNN = local_env.CrystalNN(distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False)
-strat = NearNeighbors()
-CrystalNN = StructureGraph.from_local_env_strategy(
-    CrystalNN(distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False), strat
-)
+CrystalNN = local_env.CrystalNN(distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False)
 
 
 def build_crystal(crystal_str, niggli=True, primitive=False):
@@ -283,11 +280,8 @@ def build_crystal_graph(crystal, graph_method="crystalnn"):
         try:
             crystal_graph = StructureGraph.with_local_env_strategy(crystal, CrystalNN)
         except:
-            # crystalNN_tmp = local_env.CrystalNN(
-            #     distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False, search_cutoff=10
-            # )
-            crystalNN_tmp = StructureGraph.from_local_env_strategy(
-                CrystalNN(distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False, search_cutoff=10), strat
+            crystalNN_tmp = local_env.CrystalNN(
+                distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False, search_cutoff=10
             )
 
             crystal_graph = StructureGraph.with_local_env_strategy(crystal, crystalNN_tmp)
