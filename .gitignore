@@ -167,3 +167,5 @@ clean/
 
 .DS_Store
 .out
+.pt 
+slurm/
