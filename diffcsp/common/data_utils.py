@@ -11,6 +11,7 @@ from pymatgen.analysis.graphs import StructureGraph
 
 from pymatgen.analysis import local_env
 
+
 from networkx.algorithms.components import is_connected
 
 from sklearn.metrics import accuracy_score, recall_score, precision_score
@@ -278,13 +279,15 @@ def build_crystal_graph(crystal, graph_method="crystalnn"):
 
     if graph_method == "crystalnn":
         try:
-            crystal_graph = StructureGraph.with_local_env_strategy(crystal, CrystalNN)
+            # crystal_graph = StructureGraph.with_local_env_strategy(crystal, CrystalNN)
+            crystal_graph = StructureGraph.from_local_env_strategy(crystal, CrystalNN)
         except:
             crystalNN_tmp = local_env.CrystalNN(
                 distance_cutoffs=None, x_diff_weight=-1, porous_adjustment=False, search_cutoff=10
             )
 
-            crystal_graph = StructureGraph.with_local_env_strategy(crystal, crystalNN_tmp)
+            # crystal_graph = StructureGraph.with_local_env_strategy(crystal, crystalNN_tmp)
+            crystal_graph = StructureGraph.from_local_env_strategy(crystal, crystalNN_tmp)
     elif graph_method == "none":
         pass
     else:
