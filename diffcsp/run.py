@@ -155,6 +155,9 @@ def run(cfg: DictConfig) -> None:
 
     log_hyperparameters(trainer=trainer, model=model, cfg=cfg)
 
+    if torch.cuda.is_available() and cfg.train.pl_trainer.accelerator == "gpu":
+        torch.set_float32_matmul_precision("high")  # see pytorch documentation for precision types
+
     hydra.utils.log.info("Starting training!")
     trainer.fit(model=model, datamodule=datamodule, ckpt_path=ckpt)
 
