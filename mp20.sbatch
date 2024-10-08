@@ -1,9 +1,10 @@
 #!/bin/bash
-#SBATCH -DiffCSPMP20                           
-#SBATCH -n4                                     
+#SBATCH --job-name=DiffCSPmp20                           
+#SBATCH --ntasks-per-node=4    
+#SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=16G                       
 #SBATCH --gres=gpu:H100:1                      
-#SBATCH -t2:00:00                                   
+#SBATCH -t5:00:00                                   
 #SBATCH -oReport-%j.out                       
 
 module load anaconda3                               
