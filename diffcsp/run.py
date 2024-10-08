@@ -166,7 +166,7 @@ def run(cfg: DictConfig) -> None:
         wandb_logger.experiment.finish()
 
 
-@hydra.main(config_path=str(PROJECT_ROOT / "conf"), config_name="default")
+@hydra.main(version_base=1.3, config_path=str(PROJECT_ROOT / "conf"), config_name="default")
 def main(cfg: omegaconf.DictConfig):
     run(cfg)
 

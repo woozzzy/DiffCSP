@@ -60,25 +60,16 @@ class CrystDataModule(pl.LightningDataModule):
         # Load once to compute property scaler
         if scaler_path is None:
             train_dataset = hydra.utils.instantiate(self.datasets.train)
-            self.lattice_scaler = get_scaler_from_data_list(
-                train_dataset.cached_data,
-                key='scaled_lattice')
-            self.scaler = get_scaler_from_data_list(
-                train_dataset.cached_data,
-                key=train_dataset.prop)
+            self.lattice_scaler = get_scaler_from_data_list(train_dataset.cached_data, key="scaled_lattice")
+            self.scaler = get_scaler_from_data_list(train_dataset.cached_data, key=train_dataset.prop)
         else:
             try:
-                self.lattice_scaler = torch.load(
-                    Path(scaler_path) / 'lattice_scaler.pt')
-                self.scaler = torch.load(Path(scaler_path) / 'prop_scaler.pt')
+                self.lattice_scaler = torch.load(Path(scaler_path) / "lattice_scaler.pt")
+                self.scaler = torch.load(Path(scaler_path) / "prop_scaler.pt")
             except:
                 train_dataset = hydra.utils.instantiate(self.datasets.train)
-                self.lattice_scaler = get_scaler_from_data_list(
-                    train_dataset.cached_data,
-                    key='scaled_lattice')
-                self.scaler = get_scaler_from_data_list(
-                    train_dataset.cached_data,
-                    key=train_dataset.prop)
+                self.lattice_scaler = get_scaler_from_data_list(train_dataset.cached_data, key="scaled_lattice")
+                self.scaler = get_scaler_from_data_list(train_dataset.cached_data, key=train_dataset.prop)
 
     def setup(self, stage: Optional[str] = None):
         """
@@ -86,10 +77,7 @@ class CrystDataModule(pl.LightningDataModule):
         """
         if stage is None or stage == "fit":
             self.train_dataset = hydra.utils.instantiate(self.datasets.train)
-            self.val_datasets = [
-                hydra.utils.instantiate(dataset_cfg)
-                for dataset_cfg in self.datasets.val
-            ]
+            self.val_datasets = [hydra.utils.instantiate(dataset_cfg) for dataset_cfg in self.datasets.val]
 
             self.train_dataset.lattice_scaler = self.lattice_scaler
             self.train_dataset.scaler = self.scaler
@@ -98,15 +86,12 @@ class CrystDataModule(pl.LightningDataModule):
                 val_dataset.scaler = self.scaler
 
         if stage is None or stage == "test":
-            self.test_datasets = [
-                hydra.utils.instantiate(dataset_cfg)
-                for dataset_cfg in self.datasets.test
-            ]
+            self.test_datasets = [hydra.utils.instantiate(dataset_cfg) for dataset_cfg in self.datasets.test]
             for test_dataset in self.test_datasets:
                 test_dataset.lattice_scaler = self.lattice_scaler
                 test_dataset.scaler = self.scaler
 
-    def train_dataloader(self, shuffle = True) -> DataLoader:
+    def train_dataloader(self, shuffle=True) -> DataLoader:
         return DataLoader(
             self.train_dataset,
             shuffle=shuffle,
@@ -140,22 +125,15 @@ class CrystDataModule(pl.LightningDataModule):
         ]
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"{self.datasets=}, "
-            f"{self.num_workers=}, "
-            f"{self.batch_size=})"
-        )
+        return f"{self.__class__.__name__}(" f"{self.datasets=}, " f"{self.num_workers=}, " f"{self.batch_size=})"
 
 
-
-@hydra.main(config_path=str(PROJECT_ROOT / "conf"), config_name="default")
+@hydra.main(version_base=1.3, config_path=str(PROJECT_ROOT / "conf"), config_name="default")
 def main(cfg: omegaconf.DictConfig):
-    datamodule: pl.LightningDataModule = hydra.utils.instantiate(
-        cfg.data.datamodule, _recursive_=False
-    )
-    datamodule.setup('fit')
+    datamodule: pl.LightningDataModule = hydra.utils.instantiate(cfg.data.datamodule, _recursive_=False)
+    datamodule.setup("fit")
     import pdb
+
     pdb.set_trace()
 
 

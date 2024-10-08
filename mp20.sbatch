@@ -7,7 +7,8 @@
 #SBATCH -t5:00:00                                   
 #SBATCH -oReport-%j.out                       
 
-module load anaconda3                               
+module load anaconda3                
+               
 conda activate mdl12-diffcsp
 
 cd $HOME/scratch/DiffCSP
