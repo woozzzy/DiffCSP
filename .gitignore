@@ -169,3 +169,4 @@ clean/
 *.out
 *.pt 
 slurm/
+.vscode/
