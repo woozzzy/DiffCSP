@@ -1,30 +1,31 @@
 name: mdl12-diffcsp
 channels:
-  - pytorch
-  - conda-forge
-  - nvidia
-  - defaults
+    - pytorch
+    - conda-forge
+    - nvidia
+    - defaults
 dependencies:
-  - python=3.9.*
-  - pip
-  - pytorch=2.4.0
-  - pytorch-cuda=12.1
-  - pytorch-lightning=2.4.0
-  - wandb
-  - hydra-core=1.3.2
-  - p-tqdm
-  - python-dotenv
-  - einops=0.8.0
-  - pip:
-    - -f https://data.pyg.org/whl/torch-2.4.0+cu121.html
-    - torch-scatter
-    - torch-sparse
-    - torch-cluster
-    - torch-geometric==2.4.0
-    - pre-commit
-    - numpy
-    - scipy
-    - pymatgen
-    - ase==3.21.*
-    - black
-    - pandas
+    - python=3.9.*
+    - pip
+    - pytorch=2.4.0
+    - pytorch-cuda=12.1
+    - pytorch-lightning=2.4.0
+    - wandb
+    - hydra-core=1.3.2
+    - p-tqdm
+    - python-dotenv
+    - einops=0.8.0
+    - smact
+    - pip:
+          - -f https://data.pyg.org/whl/torch-2.4.0+cu121.html
+          - torch-scatter
+          - torch-sparse
+          - torch-cluster
+          - torch-geometric==2.4.0
+          - pre-commit
+          - numpy
+          - scipy
+          - pymatgen
+          - ase==3.21.*
+          - black
+          - pandas

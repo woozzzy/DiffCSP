@@ -13,86 +13,75 @@ import smact
 from smact.screening import pauling_test
 
 import sys
-sys.path.append('.')
+
+sys.path.append(".")
 
 from diffcsp.common.constants import CompScalerMeans, CompScalerStds
 from diffcsp.common.data_utils import StandardScaler, chemical_symbols
 from diffcsp.pl_data.dataset import TensorCrystDataset
 from diffcsp.pl_data.datamodule import worker_init_fn
+from diffcsp.pl_data.diffusion import CSPDiffusion
 
 from torch_geometric.data import DataLoader
 
-CompScaler = StandardScaler(
-    means=np.array(CompScalerMeans),
-    stds=np.array(CompScalerStds),
-    replace_nan_token=0.)
+CompScaler = StandardScaler(means=np.array(CompScalerMeans), stds=np.array(CompScalerStds), replace_nan_token=0.0)
 
 import os
 
 recommand_step_lr = {
-    'csp':{
-        "perov_5": 5e-7,
-        "carbon_24": 5e-6,
-        "mp_20": 1e-5,
-        "mpts_52": 1e-5
-    },
-    'csp_multi':{
-        "perov_5": 5e-7,
-        "carbon_24": 5e-7,
-        "mp_20": 1e-5,
-        "mpts_52": 1e-5
-    },
-    'gen':{
-        "perov_5": 1e-6,
-        "carbon_24": 1e-5,
-        "mp_20": 5e-6
-    },
+    "csp": {"perov_5": 5e-7, "carbon_24": 5e-6, "mp_20": 1e-5, "mpts_52": 1e-5},
+    "csp_multi": {"perov_5": 5e-7, "carbon_24": 5e-7, "mp_20": 1e-5, "mpts_52": 1e-5},
+    "gen": {"perov_5": 1e-6, "carbon_24": 1e-5, "mp_20": 5e-6},
 }
 
 
 def lattices_to_params_shape(lattices):
 
-    lengths = torch.sqrt(torch.sum(lattices ** 2, dim=-1))
+    lengths = torch.sqrt(torch.sum(lattices**2, dim=-1))
     angles = torch.zeros_like(lengths)
     for i in range(3):
         j = (i + 1) % 3
         k = (i + 2) % 3
-        angles[...,i] = torch.clamp(torch.sum(lattices[...,j,:] * lattices[...,k,:], dim = -1) /
-                            (lengths[...,j] * lengths[...,k]), -1., 1.)
+        angles[..., i] = torch.clamp(
+            torch.sum(lattices[..., j, :] * lattices[..., k, :], dim=-1) / (lengths[..., j] * lengths[..., k]),
+            -1.0,
+            1.0,
+        )
     angles = torch.arccos(angles) * 180.0 / np.pi
 
     return lengths, angles
 
+
 def load_data(file_path):
-    if file_path[-3:] == 'npy':
+    if file_path[-3:] == "npy":
         data = np.load(file_path, allow_pickle=True).item()
         for k, v in data.items():
-            if k == 'input_data_batch':
+            if k == "input_data_batch":
                 for k1, v1 in data[k].items():
                     data[k][k1] = torch.from_numpy(v1)
             else:
                 data[k] = torch.from_numpy(v).unsqueeze(0)
     else:
-        data = torch.load(file_path, map_location='cpu')
+        data = torch.load(file_path, map_location="cpu")
     return data
 
 
 def get_model_path(eval_model_name):
     import diffcsp
-    model_path = (
-        Path(diffcsp.__file__).parent / 'prop_models' / eval_model_name)
+
+    model_path = Path(diffcsp.__file__).parent / "prop_models" / eval_model_name
     return model_path
 
 
 def load_config(model_path):
     with initialize_config_dir(str(model_path)):
-        cfg = compose(config_name='hparams')
+        cfg = compose(config_name="hparams")
     return cfg
 
 
 def load_model(model_path, load_data=False, testing=True):
     with initialize_config_dir(str(model_path)):
-        cfg = compose(config_name='hparams')
+        cfg = compose(config_name="hparams")
         model = hydra.utils.instantiate(
             cfg.model,
             optim=cfg.optim,
@@ -100,30 +89,29 @@ def load_model(model_path, load_data=False, testing=True):
             logging=cfg.logging,
             _recursive_=False,
         )
-        ckpts = list(model_path.glob('*.ckpt'))
+        ckpts = list(model_path.glob("*.ckpt"))
         if len(ckpts) > 0:
             ckpt = None
             for ck in ckpts:
-                if 'last' in ck.parts[-1]:
+                if "last" in ck.parts[-1]:
                     ckpt = str(ck)
             if ckpt is None:
                 ckpt_epochs = np.array(
-                    [int(ckpt.parts[-1].split('-')[0].split('=')[1]) for ckpt in ckpts if 'last' not in ckpt.parts[-1]])
+                    [int(ckpt.parts[-1].split("-")[0].split("=")[1]) for ckpt in ckpts if "last" not in ckpt.parts[-1]]
+                )
                 ckpt = str(ckpts[ckpt_epochs.argsort()[-1]])
         hparams = os.path.join(model_path, "hparams.yaml")
-        model = model.load_from_checkpoint(ckpt, hparams_file=hparams, strict=False)
+        model = CSPDiffusion.load_from_checkpoint(ckpt, hparams_file=hparams, strict=False)
         try:
-            model.lattice_scaler = torch.load(model_path / 'lattice_scaler.pt')
-            model.scaler = torch.load(model_path / 'prop_scaler.pt')
+            model.lattice_scaler = torch.load(model_path / "lattice_scaler.pt")
+            model.scaler = torch.load(model_path / "prop_scaler.pt")
         except:
             pass
 
         if load_data:
-            datamodule = hydra.utils.instantiate(
-                cfg.data.datamodule, _recursive_=False, scaler_path=model_path
-            )
+            datamodule = hydra.utils.instantiate(cfg.data.datamodule, _recursive_=False, scaler_path=model_path)
             if testing:
-                datamodule.setup('test')
+                datamodule.setup("test")
                 test_loader = datamodule.test_dataloader()[0]
             else:
                 datamodule.setup()
@@ -136,8 +124,7 @@ def load_model(model_path, load_data=False, testing=True):
     return model, test_loader, cfg
 
 
-def get_crystals_list(
-        frac_coords, atom_types, lengths, angles, num_atoms):
+def get_crystals_list(frac_coords, atom_types, lengths, angles, num_atoms):
     """
     args:
         frac_coords: (num_atoms, 3)
@@ -157,19 +144,19 @@ def get_crystals_list(
         cur_lengths = lengths[batch_idx]
         cur_angles = angles[batch_idx]
 
-        crystal_array_list.append({
-            'frac_coords': cur_frac_coords.detach().cpu().numpy(),
-            'atom_types': cur_atom_types.detach().cpu().numpy(),
-            'lengths': cur_lengths.detach().cpu().numpy(),
-            'angles': cur_angles.detach().cpu().numpy(),
-        })
+        crystal_array_list.append(
+            {
+                "frac_coords": cur_frac_coords.detach().cpu().numpy(),
+                "atom_types": cur_atom_types.detach().cpu().numpy(),
+                "lengths": cur_lengths.detach().cpu().numpy(),
+                "angles": cur_angles.detach().cpu().numpy(),
+            }
+        )
         start_idx = start_idx + num_atom
     return crystal_array_list
 
 
-def smact_validity(comp, count,
-                   use_pauling_test=True,
-                   include_alloys=True):
+def smact_validity(comp, count, use_pauling_test=True, include_alloys=True):
     elem_symbols = tuple([chemical_symbols[elem] for elem in comp])
     space = smact.element_dictionary(elem_symbols)
     smact_elems = [e[1] for e in space.items()]
@@ -194,8 +181,7 @@ def smact_validity(comp, count,
     for ox_states in itertools.product(*ox_combos):
         stoichs = [(c,) for c in count]
         # Test for charge balance
-        cn_e, cn_r = smact.neutral_ratios(
-            ox_states, stoichs=stoichs, threshold=threshold)
+        cn_e, cn_r = smact.neutral_ratios(ox_states, stoichs=stoichs, threshold=threshold)
         # Electronegativity test
         if cn_e:
             if use_pauling_test:
@@ -214,8 +200,7 @@ def smact_validity(comp, count,
 def structure_validity(crystal, cutoff=0.5):
     dist_mat = crystal.distance_matrix
     # Pad diagonal with a large number
-    dist_mat = dist_mat + np.diag(
-        np.ones(dist_mat.shape[0]) * (cutoff + 10.))
+    dist_mat = dist_mat + np.diag(np.ones(dist_mat.shape[0]) * (cutoff + 10.0))
     if dist_mat.min() < cutoff or crystal.volume < 0.1:
         return False
     else:
@@ -237,18 +222,17 @@ def prop_model_eval(eval_model_name, crystal_array_list):
     cfg = load_config(model_path)
 
     dataset = TensorCrystDataset(
-        crystal_array_list, cfg.data.niggli, cfg.data.primitive,
-        cfg.data.graph_method, cfg.data.preprocess_workers,
-        cfg.data.lattice_scale_method)
+        crystal_array_list,
+        cfg.data.niggli,
+        cfg.data.primitive,
+        cfg.data.graph_method,
+        cfg.data.preprocess_workers,
+        cfg.data.lattice_scale_method,
+    )
 
     dataset.scaler = model.scaler.copy()
 
-    loader = DataLoader(
-        dataset,
-        shuffle=False,
-        batch_size=256,
-        num_workers=0,
-        worker_init_fn=worker_init_fn)
+    loader = DataLoader(dataset, shuffle=False, batch_size=256, num_workers=0, worker_init_fn=worker_init_fn)
 
     model.eval()
 
@@ -276,8 +260,7 @@ def filter_fps(struc_fps, comp_fps):
     return filtered_struc_fps, filtered_comp_fps
 
 
-def compute_cov(crys, gt_crys,
-                struc_cutoff, comp_cutoff, num_gen_crystals=None):
+def compute_cov(crys, gt_crys, struc_cutoff, comp_cutoff, num_gen_crystals=None):
     struc_fps = [c.struct_fp for c in crys]
     comp_fps = [c.comp_fp for c in crys]
     gt_struc_fps = [c.struct_fp for c in gt_crys]
@@ -308,27 +291,26 @@ def compute_cov(crys, gt_crys,
     comp_recall_dist = comp_pdist.min(axis=0)
     comp_precision_dist = comp_pdist.min(axis=1)
 
-    cov_recall = np.mean(np.logical_and(
-        struc_recall_dist <= struc_cutoff,
-        comp_recall_dist <= comp_cutoff))
-    cov_precision = np.sum(np.logical_and(
-        struc_precision_dist <= struc_cutoff,
-        comp_precision_dist <= comp_cutoff)) / num_gen_crystals
+    cov_recall = np.mean(np.logical_and(struc_recall_dist <= struc_cutoff, comp_recall_dist <= comp_cutoff))
+    cov_precision = (
+        np.sum(np.logical_and(struc_precision_dist <= struc_cutoff, comp_precision_dist <= comp_cutoff))
+        / num_gen_crystals
+    )
 
     metrics_dict = {
-        'cov_recall': cov_recall,
-        'cov_precision': cov_precision,
-        'amsd_recall': np.mean(struc_recall_dist),
-        'amsd_precision': np.mean(struc_precision_dist),
-        'amcd_recall': np.mean(comp_recall_dist),
-        'amcd_precision': np.mean(comp_precision_dist),
+        "cov_recall": cov_recall,
+        "cov_precision": cov_precision,
+        "amsd_recall": np.mean(struc_recall_dist),
+        "amsd_precision": np.mean(struc_precision_dist),
+        "amcd_recall": np.mean(comp_recall_dist),
+        "amcd_precision": np.mean(comp_precision_dist),
     }
 
     combined_dist_dict = {
-        'struc_recall_dist': struc_recall_dist.tolist(),
-        'struc_precision_dist': struc_precision_dist.tolist(),
-        'comp_recall_dist': comp_recall_dist.tolist(),
-        'comp_precision_dist': comp_precision_dist.tolist(),
+        "struc_recall_dist": struc_recall_dist.tolist(),
+        "struc_precision_dist": struc_precision_dist.tolist(),
+        "comp_recall_dist": comp_recall_dist.tolist(),
+        "comp_precision_dist": comp_precision_dist.tolist(),
     }
 
     return metrics_dict, combined_dist_dict
