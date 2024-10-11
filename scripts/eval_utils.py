@@ -5,7 +5,7 @@ import hydra
 
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import cdist
-from hydra.experimental import compose
+from hydra import compose
 from hydra import initialize_config_dir
 from pathlib import Path
 
@@ -62,7 +62,7 @@ def load_data(file_path):
             else:
                 data[k] = torch.from_numpy(v).unsqueeze(0)
     else:
-        data = torch.load(file_path, map_location="cpu")
+        data = torch.load(file_path, map_location="cpu", weights_only=False)
     return data
 
 
@@ -103,8 +103,8 @@ def load_model(model_path, load_data=False, testing=True):
         hparams = os.path.join(model_path, "hparams.yaml")
         model = CSPDiffusion.load_from_checkpoint(ckpt, hparams_file=hparams, strict=False)
         try:
-            model.lattice_scaler = torch.load(model_path / "lattice_scaler.pt")
-            model.scaler = torch.load(model_path / "prop_scaler.pt")
+            model.lattice_scaler = torch.load(model_path / "lattice_scaler.pt", weights_only=False)
+            model.scaler = torch.load(model_path / "prop_scaler.pt", weights_only=False)
         except:
             pass
 
