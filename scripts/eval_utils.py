@@ -74,13 +74,13 @@ def get_model_path(eval_model_name):
 
 
 def load_config(model_path):
-    with initialize_config_dir(str(model_path)):
+    with initialize_config_dir(str(model_path), version_base="1.3"):
         cfg = compose(config_name="hparams")
     return cfg
 
 
 def load_model(model_path, load_data=False, testing=True):
-    with initialize_config_dir(str(model_path)):
+    with initialize_config_dir(str(model_path), version_base="1.3"):
         cfg = compose(config_name="hparams")
         model = hydra.utils.instantiate(
             cfg.model,
