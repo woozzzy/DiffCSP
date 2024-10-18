@@ -6,7 +6,8 @@ from tqdm import tqdm
 from torch.optim import Adam
 from pathlib import Path
 from types import SimpleNamespace
-from torch_geometric.data import Data, Batch, DataLoader
+from torch_geometric.data import Data, Batch
+from torch_geometric.loader import DataLoader
 from torch.utils.data import Dataset
 from eval_utils import load_model, lattices_to_params_shape, get_crystals_list
 
@@ -23,29 +24,134 @@ import os
 
 chemical_symbols = [
     # 0
-    'X',
+    "X",
     # 1
-    'H', 'He',
+    "H",
+    "He",
     # 2
-    'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne',
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Ne",
     # 3
-    'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
+    "Na",
+    "Mg",
+    "Al",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "Ar",
     # 4
-    'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
-    'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+    "Cu",
+    "Zn",
+    "Ga",
+    "Ge",
+    "As",
+    "Se",
+    "Br",
+    "Kr",
     # 5
-    'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
-    'In', 'Sn', 'Sb', 'Te', 'I', 'Xe',
+    "Rb",
+    "Sr",
+    "Y",
+    "Zr",
+    "Nb",
+    "Mo",
+    "Tc",
+    "Ru",
+    "Rh",
+    "Pd",
+    "Ag",
+    "Cd",
+    "In",
+    "Sn",
+    "Sb",
+    "Te",
+    "I",
+    "Xe",
     # 6
-    'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy',
-    'Ho', 'Er', 'Tm', 'Yb', 'Lu',
-    'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
-    'Po', 'At', 'Rn',
+    "Cs",
+    "Ba",
+    "La",
+    "Ce",
+    "Pr",
+    "Nd",
+    "Pm",
+    "Sm",
+    "Eu",
+    "Gd",
+    "Tb",
+    "Dy",
+    "Ho",
+    "Er",
+    "Tm",
+    "Yb",
+    "Lu",
+    "Hf",
+    "Ta",
+    "W",
+    "Re",
+    "Os",
+    "Ir",
+    "Pt",
+    "Au",
+    "Hg",
+    "Tl",
+    "Pb",
+    "Bi",
+    "Po",
+    "At",
+    "Rn",
     # 7
-    'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk',
-    'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr',
-    'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc',
-    'Lv', 'Ts', 'Og']
+    "Fr",
+    "Ra",
+    "Ac",
+    "Th",
+    "Pa",
+    "U",
+    "Np",
+    "Pu",
+    "Am",
+    "Cm",
+    "Bk",
+    "Cf",
+    "Es",
+    "Fm",
+    "Md",
+    "No",
+    "Lr",
+    "Rf",
+    "Db",
+    "Sg",
+    "Bh",
+    "Hs",
+    "Mt",
+    "Ds",
+    "Rg",
+    "Cn",
+    "Nh",
+    "Fl",
+    "Mc",
+    "Lv",
+    "Ts",
+    "Og",
+]
+
 
 def diffusion(loader, model, step_lr):
 
@@ -58,11 +164,11 @@ def diffusion(loader, model, step_lr):
 
         if torch.cuda.is_available():
             batch.cuda()
-        outputs, traj = model.sample(batch, step_lr = step_lr)
-        frac_coords.append(outputs['frac_coords'].detach().cpu())
-        num_atoms.append(outputs['num_atoms'].detach().cpu())
-        atom_types.append(outputs['atom_types'].detach().cpu())
-        lattices.append(outputs['lattices'].detach().cpu())
+        outputs, traj = model.sample(batch, step_lr=step_lr)
+        frac_coords.append(outputs["frac_coords"].detach().cpu())
+        num_atoms.append(outputs["num_atoms"].detach().cpu())
+        atom_types.append(outputs["atom_types"].detach().cpu())
+        lattices.append(outputs["lattices"].detach().cpu())
 
     frac_coords = torch.cat(frac_coords, dim=0)
     num_atoms = torch.cat(num_atoms, dim=0)
@@ -70,9 +176,8 @@ def diffusion(loader, model, step_lr):
     lattices = torch.cat(lattices, dim=0)
     lengths, angles = lattices_to_params_shape(lattices)
 
-    return (
-        frac_coords, atom_types, lattices, lengths, angles, num_atoms
-    )
+    return (frac_coords, atom_types, lattices, lengths, angles, num_atoms)
+
 
 class SampleDataset(Dataset):
 
@@ -100,36 +205,39 @@ class SampleDataset(Dataset):
             num_nodes=len(self.chem_list),
         )
 
+
 def get_pymatgen(crystal_array):
-    frac_coords = crystal_array['frac_coords']
-    atom_types = crystal_array['atom_types']
-    lengths = crystal_array['lengths']
-    angles = crystal_array['angles']
+    frac_coords = crystal_array["frac_coords"]
+    atom_types = crystal_array["atom_types"]
+    lengths = crystal_array["lengths"]
+    angles = crystal_array["angles"]
     try:
         structure = Structure(
-            lattice=Lattice.from_parameters(
-                *(lengths.tolist() + angles.tolist())),
-            species=atom_types, coords=frac_coords, coords_are_cartesian=False)
+            lattice=Lattice.from_parameters(*(lengths.tolist() + angles.tolist())),
+            species=atom_types,
+            coords=frac_coords,
+            coords_are_cartesian=False,
+        )
         return structure
     except:
         return None
 
+
 def main(args):
     # load_data if do reconstruction.
     model_path = Path(args.model_path)
-    model, _, cfg = load_model(
-        model_path, load_data=False)
+    model, _, cfg = load_model(model_path, load_data=False)
 
     if torch.cuda.is_available():
-        model.to('cuda')
+        model.to("cuda")
 
     tar_dir = os.path.join(args.save_path, args.formula)
     os.makedirs(tar_dir, exist_ok=True)
 
-    print('Evaluate the diffusion model.')
+    print("Evaluate the diffusion model.")
 
     test_set = SampleDataset(args.formula, args.num_evals)
-    test_loader = DataLoader(test_set, batch_size = min(args.batch_size, args.num_evals))
+    test_loader = DataLoader(test_set, batch_size=min(args.batch_size, args.num_evals))
 
     start_time = time.time()
     (frac_coords, atom_types, lattices, lengths, angles, num_atoms) = diffusion(test_loader, model, args.step_lr)
@@ -138,26 +246,24 @@ def main(args):
 
     strcuture_list = p_map(get_pymatgen, crystal_list)
 
-    for i,structure in enumerate(strcuture_list):
+    for i, structure in enumerate(strcuture_list):
         tar_file = os.path.join(tar_dir, f"{args.formula}_{i+1}.cif")
         if structure is not None:
             writer = CifWriter(structure)
             writer.write_file(tar_file)
         else:
             print(f"{i+1} Error Structure.")
-      
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', required=True)
-    parser.add_argument('--save_path', required=True)
-    parser.add_argument('--formula', required=True)
-    parser.add_argument('--num_evals', default=1, type=int)
-    parser.add_argument('--batch_size', default=500, type=int)
-    parser.add_argument('--step_lr', default=1e-5, type=float)
+    parser.add_argument("--model_path", required=True)
+    parser.add_argument("--save_path", required=True)
+    parser.add_argument("--formula", required=True)
+    parser.add_argument("--num_evals", default=1, type=int)
+    parser.add_argument("--batch_size", default=500, type=int)
+    parser.add_argument("--step_lr", default=1e-5, type=float)
 
     args = parser.parse_args()
-
 
     main(args)
