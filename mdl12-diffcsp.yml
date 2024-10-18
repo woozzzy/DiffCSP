@@ -18,6 +18,7 @@ dependencies:
     - smact
     - matminer
     - pyarrow
+    - chemparse
     - pip:
           - -f https://data.pyg.org/whl/torch-2.4.0+cu121.html
           - torch-scatter
