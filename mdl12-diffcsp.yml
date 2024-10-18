@@ -16,6 +16,7 @@ dependencies:
     - python-dotenv
     - einops=0.8.0
     - smact
+    - matminer
     - pip:
           - -f https://data.pyg.org/whl/torch-2.4.0+cu121.html
           - torch-scatter
